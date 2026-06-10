@@ -1,0 +1,46 @@
+# Example team configuration (fictional players — safe for public repos).
+# Copy to team.local.yaml and customize for your deployment (team.local.yaml is gitignored).
+
+allowed_players:
+  - first: Alex
+    last: Rivera
+  - first: Jordan
+    last: Chen
+
+skip_players:
+  - first: Test
+    last: Placeholder
+
+master_pitcher_splits:
+  - first: Alex
+    last: Rivera
+  - first: Jordan
+    last: Chen
+
+master_hit_outcome:
+  - first: Alex
+    last: Rivera
+  - first: Jordan
+    last: Chen
+
+skip_pitchers_for_reports: []
+
+display_name_overrides: {}
+
+roster:
+  - first: Alex
+    last: Rivera
+    position: P
+    bats: R
+    throws: R
+  - first: Jordan
+    last: Chen
+    position: P
+    bats: L
+    throws: L
+
+# Map normalized name keys (first+last, alphanumeric only) to a pitch-grouping style.
+# Available styles are defined in src/reports/pitch_grouping.py
+pitch_grouping:
+  alexrivera: multi_fastball_sinker_slider
+  jordanchen: slider_to_2seam

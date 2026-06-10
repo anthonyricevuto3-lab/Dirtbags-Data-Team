@@ -1,0 +1,34 @@
+# Dirtbags Data Team Configuration
+
+# Data paths
+data_root: "BaseballData"
+reports_output: "BaseballData/{year}/{opponent}/Series_{date}/Game_{game}/Pitching/Reports"
+
+# Trackman settings
+trackman:
+  auto_generate_reports: true
+  watch_directory: "BaseballData/{year}/{opponent}/Series_{date}/Game_{game}/Pitching/Trackman"
+  output_directory: "BaseballData/{year}/{opponent}/Series_{date}/Game_{game}/Pitching/Reports"
+
+# Scouting settings
+scouting:
+  output_directory: "BaseballData/{year}/{opponent}/Series_{date}/Scouting"
+
+# Dashboard settings
+dashboard:
+  port: 8501
+  host: "localhost"
+  internal_only: true
+
+# Logging
+logging:
+  level: "INFO"
+  file: "logs/dirtbags_data_team.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Validation
+validation:
+  strict_mode: false
+  check_file_naming: true
+  check_folder_structure: true
+

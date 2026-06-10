@@ -1,0 +1,25 @@
+# Dirtbags Data Team - Python Dependencies
+
+# Core data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization
+matplotlib>=3.7.0
+
+# File watching (for automation)
+watchdog>=3.0.0
+
+# Configuration
+pyyaml>=6.0
+
+# Testing
+pytest>=7.4.0
+
+# Web Application
+flask>=3.0.0
+
+# Dashboard (optional - uncomment if using)
+# plotly>=5.17.0
+# streamlit>=1.28.0
+
