@@ -22,10 +22,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.profiles import ProfileManager
 from src.profiles.paths import ensure_player_dir
-from src.reports.player_profile_report import (
-    generate_player_profile_report,
-    generate_inseason_player_profile_report,
-)
 
 
 class CSVHandler(FileSystemEventHandler):
@@ -67,30 +63,12 @@ class CSVHandler(FileSystemEventHandler):
                         self.profile_manager.profiles_dir
                     )
                     if player_profile:
-                        player_dir = ensure_player_dir(self.profile_manager.profiles_dir, first_name, last_name)
-                        base_name = result['player'].replace(' ', '_')
-
-                        # Full cumulative profile
-                        pdf_path = player_dir / f"{base_name}_Profile.pdf"
-                        print(f"[GENERATING] PDF report: {pdf_path.name}")
-                        generate_player_profile_report(player_profile, str(pdf_path))
-                        print(f"[COMPLETE] Report generated successfully!")
-
-                        # 2026 in-season profile (2/13/2026 – present)
-                        inseason_name = f"2026_In-Season_{base_name}_Player_Profile.pdf"
-                        inseason_path = player_dir / inseason_name
-                        try:
-                            print(f"[GENERATING] In-season PDF report: {inseason_path.name}")
-                            generate_inseason_player_profile_report(player_profile, str(inseason_path))
-                            print(f"[COMPLETE] In-season report generated successfully!")
-                        except Exception as e:
-                            print(f"[WARN] In-season report skipped: {e}")
-                # Also regenerate single-outing reports to incorporate new outing
+                        ensure_player_dir(self.profile_manager.profiles_dir, first_name, last_name)
                 try:
-                    gen_script = self.base_dir / "scripts" / "generate_single_outing_643.py"
-                    subprocess.run([sys.executable, str(gen_script)], check=True)
+                    reports = self.base_dir / "scripts" / "generate_preview_reports.py"
+                    subprocess.run([sys.executable, str(reports)], check=True)
                 except Exception as e:
-                    print(f"[WARN] Single-outing generation failed: {e}")
+                    print(f"[WARN] Report generation failed: {e}")
             else:
                 print(f"[ERROR] Failed to process: {result.get('error', 'Unknown error')}")
             
@@ -124,35 +102,14 @@ def process_all_existing():
     ]
     
     for profile in profiles:
-        player_dir = ensure_player_dir(profiles_dir, profile.first_name, profile.last_name)
-        base_name = profile.full_name.replace(' ', '_')
+        ensure_player_dir(profiles_dir, profile.first_name, profile.last_name)
 
-        # Full cumulative profile
-        pdf_path = player_dir / f"{base_name}_Profile.pdf"
-        print(f"  Generating report for {profile.full_name}...")
-        try:
-            generate_player_profile_report(profile, str(pdf_path))
-            print(f"    [SUCCESS] {pdf_path.name}")
-        except Exception as e:
-            print(f"    [ERROR] {e}")
-
-        # 2026 in-season profile (2/13/2026 – present)
-        inseason_name = f"2026_In-Season_{base_name}_Player_Profile.pdf"
-        inseason_path = player_dir / inseason_name
-        try:
-            print(f"    Generating in-season report for {profile.full_name}...")
-            generate_inseason_player_profile_report(profile, str(inseason_path))
-            print(f"    [SUCCESS] {inseason_path.name}")
-        except Exception as e:
-            print(f"    [WARN] In-season report skipped: {e}")
-
-    # Also refresh single-outing reports so the latest outing gets its own PDF
     try:
-        gen_script = base_dir / "scripts" / "generate_single_outing_643.py"
-        print("\n[GENERATING SINGLE-OUTING REPORTS]")
-        subprocess.run([sys.executable, str(gen_script)], check=True)
+        reports = base_dir / "scripts" / "generate_preview_reports.py"
+        print("\n[GENERATING GAME, BULLPEN, AND PROFILE REPORTS]")
+        subprocess.run([sys.executable, str(reports)], check=True)
     except Exception as e:
-        print(f"[WARN] Single-outing generation failed: {e}")
+        print(f"[WARN] Report generation failed: {e}")
 
     print("\n[COMPLETE] All profiles processed and reports generated!")
 

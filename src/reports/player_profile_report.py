@@ -25,10 +25,14 @@ from ..pitch_colors import get_pitch_color_map, DEFAULT_PITCH_COLOR
 # In-season cutoff for 2026 reports
 DATE_CUTOFF_2026 = date(2026, 2, 13)
 
+# Fall 2026 window (inclusive)
+FALL_2026_START = date(2026, 9, 1)
+FALL_2026_END = date(2027, 2, 12)
+
 # Logo path candidates (handle workspace path quirks and copied asset)
 _LOGO_CANDIDATES = [
-    Path(__file__).resolve().parent.parent / "images" / "dirtbags logo.jpg",
-    Path("images") / "dirtbags logo.jpg",
+    Path(__file__).resolve().parent.parent / "images" / "Dirtbag Data Team baseball logo.png",
+    Path("images") / "Dirtbag Data Team baseball logo.png",
 ]
 
 
@@ -75,6 +79,8 @@ def generate_player_profile_report(
     profile,
     output_path: str,
     inning_success_df: Optional[pd.DataFrame] = None,
+    title_label: str = "Player Profile",
+    inning_success_title: str = "Inning Success — In-Season",
 ) -> None:
     """
     Generate cumulative player profile PDF report.
@@ -82,7 +88,9 @@ def generate_player_profile_report(
     Args:
         profile: PlayerProfile object
         output_path: Path for output PDF
-        inning_success_df: Optional table of inning success metrics (for in-season report).
+        inning_success_df: Optional table of inning success metrics (for windowed reports).
+        title_label: Heading shown on the title page.
+        inning_success_title: Heading for the optional inning-success page.
     """
     # Get cumulative data and work on a copy so grouping never mutates shared data
     df = profile.get_cumulative_data().copy()
@@ -476,7 +484,7 @@ def generate_player_profile_report(
         if logo_path:
             try:
                 logo_img = plt.imread(logo_path)
-                ax_logo = fig.add_axes([0.2, 0.72, 0.6, 0.2])
+                ax_logo = fig.add_axes([0.16, 0.78, 0.68, 0.68 * 8.5 / 3 / 11])
                 ax_logo.imshow(logo_img)
                 ax_logo.axis('off')
             except Exception:
@@ -484,7 +492,7 @@ def generate_player_profile_report(
                 pass
         
         disp_name = _abbrev_name(profile.full_name)
-        title_text = f"Player Profile\n{disp_name}\n\n"
+        title_text = f"{title_label}\n{disp_name}\n\n"
         title_text += f"Total Outings: {profile.total_outings}\n"
         title_text += f"Total Pitches: {profile.total_pitches}\n\n"
         if getattr(profile, 'player_id', None):
@@ -676,80 +684,40 @@ def generate_player_profile_report(
             plt.close(fig_tr)
 
         # Summary Tables
-        # Arsenal Summary
-        fig, ax = plt.subplots(figsize=(11, 8.5), dpi=100)
-        ax.axis('off')
-        ax.set_title('Arsenal Summary - Cumulative', fontsize=16, fontweight='bold', pad=20)
-        
-        table = ax.table(
-            cellText=arsenal_summary.values,
-            colLabels=arsenal_summary.columns,
-            cellLoc='center',
-            loc='center',
-            bbox=[0, 0, 1, 1],
-        )
-        table.auto_set_font_size(False)
-        table.set_fontsize(9)
-        table.scale(1, 2)
-        
-        for i in range(len(arsenal_summary.columns)):
-            table[(0, i)].set_facecolor('#4CAF50')
-            table[(0, i)].set_text_props(weight='bold', color='white')
-        
-        pdf.savefig(fig, bbox_inches='tight', dpi=100)
-        plt.close(fig)
-        
-        # Contact Outcomes
-        fig, ax = plt.subplots(figsize=(11, 8.5), dpi=100)
-        ax.axis('off')
-        ax.set_title('Contact Outcomes - Cumulative', fontsize=16, fontweight='bold', pad=20)
-        
-        table = ax.table(
-            cellText=contact_summary.values,
-            colLabels=contact_summary.columns,
-            cellLoc='center',
-            loc='center',
-            bbox=[0, 0, 1, 1],
-        )
-        table.auto_set_font_size(False)
-        table.set_fontsize(9)
-        table.scale(1, 2)
-        
-        for i in range(len(contact_summary.columns)):
-            table[(0, i)].set_facecolor('#2196F3')
-            table[(0, i)].set_text_props(weight='bold', color='white')
-        
-        pdf.savefig(fig, bbox_inches='tight', dpi=100)
-        plt.close(fig)
-        
-        # Plate Discipline
-        fig, ax = plt.subplots(figsize=(11, 8.5), dpi=100)
-        ax.axis('off')
-        ax.set_title('Plate Discipline - Cumulative', fontsize=16, fontweight='bold', pad=20)
-        
-        table = ax.table(
-            cellText=plate_discipline.values,
-            colLabels=plate_discipline.columns,
-            cellLoc='center',
-            loc='center',
-            bbox=[0, 0, 1, 1],
-        )
-        table.auto_set_font_size(False)
-        table.set_fontsize(9)
-        table.scale(1, 2)
-        
-        for i in range(len(plate_discipline.columns)):
-            table[(0, i)].set_facecolor('#FF9800')
-            table[(0, i)].set_text_props(weight='bold', color='white')
-        
-        pdf.savefig(fig, bbox_inches='tight', dpi=100)
-        plt.close(fig)
+        def _save_summary_table(summary, title, header_color):
+            fig, ax = plt.subplots(figsize=(11, 8.5), dpi=100)
+            ax.axis('off')
+            ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
+            if summary is None or len(summary) == 0:
+                ax.text(0.5, 0.5, "No data", ha='center', va='center', fontsize=14)
+                pdf.savefig(fig, bbox_inches='tight', dpi=100)
+                plt.close(fig)
+                return
+            table = ax.table(
+                cellText=summary.values,
+                colLabels=summary.columns,
+                cellLoc='center',
+                loc='center',
+                bbox=[0, 0, 1, 1],
+            )
+            table.auto_set_font_size(False)
+            table.set_fontsize(9)
+            table.scale(1, 2)
+            for i in range(len(summary.columns)):
+                table[(0, i)].set_facecolor(header_color)
+                table[(0, i)].set_text_props(weight='bold', color='white')
+            pdf.savefig(fig, bbox_inches='tight', dpi=100)
+            plt.close(fig)
+
+        _save_summary_table(arsenal_summary, 'Arsenal Summary - Cumulative', '#4CAF50')
+        _save_summary_table(contact_summary, 'Contact Outcomes - Cumulative', '#2196F3')
+        _save_summary_table(plate_discipline, 'Plate Discipline - Cumulative', '#FF9800')
 
         # Inning Success table (e.g. for in-season report)
         if inning_success_df is not None and not inning_success_df.empty:
             fig, ax = plt.subplots(figsize=(11, 8.5), dpi=100)
             ax.axis('off')
-            ax.set_title('Inning Success — In-Season', fontsize=16, fontweight='bold', pad=20)
+            ax.set_title(inning_success_title, fontsize=16, fontweight='bold', pad=20)
             # Format percentages for display
             display_df = inning_success_df.copy()
             for col in ['PA Win %', 'Whiff %', 'Weak Contact %', 'Dominance %', 'Inning Success %']:
@@ -775,36 +743,41 @@ def generate_player_profile_report(
         
         # Metadata
         d = pdf.infodict()
-        d['Title'] = f'Player Profile - {profile.full_name}'
+        d['Title'] = f'{title_label} - {profile.full_name}'
         d['Author'] = 'Dirtbags Data Team'
         d['Subject'] = f"Cumulative Statistics - {profile.total_outings} outings, {profile.total_pitches} pitches"
 
 
-def generate_inseason_player_profile_report(
-    profile,
-    output_path: str,
-    cutoff: date = DATE_CUTOFF_2026,
-) -> None:
-    """
-    Generate in-season player profile PDF report using only outings on/after cutoff.
-    Layout/visuals are identical to the standard cumulative profile.
-
-    Args:
-        profile: PlayerProfile object
-        output_path: Path for output PDF
-        cutoff: Earliest date (inclusive) for Trackman outings to include.
-    """
-    # Collect outings that fall on/after the cutoff date
-    season_outings = []
+def _outings_in_window(profile, start: date, end: Optional[date] = None):
+    """Return outings whose date falls in [start, end] (end optional)."""
+    selected = []
     for outing in getattr(profile, "outings", []):
         meta = outing.get("metadata", {})
         dt = _parse_outing_date(meta.get("date"))
-        if not dt or dt.date() < cutoff:
+        if not dt:
             continue
-        season_outings.append(outing)
+        outing_date = dt.date()
+        if outing_date < start:
+            continue
+        if end is not None and outing_date > end:
+            continue
+        selected.append(outing)
+    return selected
 
+
+def generate_windowed_player_profile_report(
+    profile,
+    output_path: str,
+    start: date,
+    end: Optional[date] = None,
+    title_label: str = "Player Profile",
+    inning_success_title: str = "Inning Success",
+    empty_message: str = "No data available for profile in the selected date window",
+) -> None:
+    """Generate a profile PDF using only outings between start and end (inclusive)."""
+    season_outings = _outings_in_window(profile, start, end)
     if not season_outings:
-        raise ValueError("No in-season data available for profile")
+        raise ValueError(empty_message)
 
     # Build combined in-season DataFrame and compute inning success metrics for the table
     season_frames = [o.get("data") for o in season_outings if isinstance(o.get("data"), pd.DataFrame)]
@@ -827,7 +800,13 @@ def generate_inseason_player_profile_report(
             profile._recompute_totals()
 
         # Reuse the standard report generator with inning success table
-        generate_player_profile_report(profile, output_path, inning_success_df=inning_success_df)
+        generate_player_profile_report(
+            profile,
+            output_path,
+            inning_success_df=inning_success_df,
+            title_label=title_label,
+            inning_success_title=inning_success_title,
+        )
     finally:
         # Restore original state so the in-memory profile remains cumulative
         if orig_outings is not None:
@@ -838,4 +817,41 @@ def generate_inseason_player_profile_report(
             profile.total_outings = orig_total_outings
         if orig_total_pitches is not None:
             profile.total_pitches = orig_total_pitches
+
+
+def generate_inseason_player_profile_report(
+    profile,
+    output_path: str,
+    cutoff: date = DATE_CUTOFF_2026,
+) -> None:
+    """
+    Generate in-season player profile PDF report using only outings on/after cutoff.
+    Layout/visuals are identical to the standard cumulative profile.
+    """
+    generate_windowed_player_profile_report(
+        profile,
+        output_path,
+        start=cutoff,
+        title_label="2026 In-Season Player Profile",
+        inning_success_title="Inning Success — In-Season",
+        empty_message="No in-season data available for profile",
+    )
+
+
+def generate_fall_2026_player_profile_report(
+    profile,
+    output_path: str,
+    start: date = FALL_2026_START,
+    end: date = FALL_2026_END,
+) -> None:
+    """Generate a Fall 2026 profile using outings from 2026-09-01 through 2027-02-12."""
+    generate_windowed_player_profile_report(
+        profile,
+        output_path,
+        start=start,
+        end=end,
+        title_label="Fall 2026 Player Profile",
+        inning_success_title="Inning Success — Fall 2026",
+        empty_message="No Fall 2026 data available for profile",
+    )
 

@@ -68,6 +68,9 @@ class TrackmanSchema:
         'outs_on_play': int,         # Outs recorded on the play (OutsOnPlay)
         'play_result': str,          # At-bat outcome (PlayResult: Out, Single, etc.)
         'runs_scored': int,           # Runs scored on the play (RunsScored)
+        'custom_tags': str,           # Raw CustomTags from the Trackman export
+        'pitch_session': str,         # PitchSession (Live, Warmup)
+        'batter_name': str,          # Batter name when the file also has a batter id
     }
     
     # Column mapping from common Trackman export names to canonical names
@@ -168,6 +171,8 @@ class TrackmanSchema:
         'VAA': 'vaa',
         'HAA': 'haa',
         'KorBB': 'KorBB',
+        'CustomTags': 'custom_tags',
+        'PitchSession': 'pitch_session',
     }
     
     # Units (for documentation)
@@ -200,10 +205,20 @@ def clean_trackman(df: pd.DataFrame, strict: bool = False) -> pd.DataFrame:
         Cleaned DataFrame with canonical column names and types
     """
     df = df.copy()
+
+    # Induced break is the IVB the reports show. VertBreak includes gravity.
+    if "InducedVertBreak" in df.columns:
+        df = df.drop(columns=[column for column in ("VertBreak", "PfxZ") if column in df.columns])
+    if "HorzBreak" in df.columns and "PfxX" in df.columns:
+        df = df.drop(columns=["PfxX"])
     
     # Track whether raw PlateLocSide/Height (feet) are present so we can convert to inches
     raw_plate_side_in_feet = 'PlateLocSide' in df.columns
     raw_plate_height_in_feet = 'PlateLocHeight' in df.columns
+
+    # Keep the hitter's name when the file also has a separate batter id.
+    if "Batter" in df.columns and any(column in df.columns for column in ("BatterId", "BatterID", "Batter ID")):
+        df = df.rename(columns={"Batter": "batter_name"})
 
     # Map column names to canonical names
     rename_map = {}
@@ -380,7 +395,15 @@ def clean_trackman(df: pd.DataFrame, strict: bool = False) -> pd.DataFrame:
             canonical_cols.append(col)
     
     df = df[canonical_cols]
-    
+
+    from .custom_tags import apply_custom_tag_calls, filter_warmup_when_live_present, infer_results_from_batter_change
+
+    df = filter_warmup_when_live_present(df)
+    df = apply_custom_tag_calls(df)
+    if "batter_name" not in df.columns and "batter_id" in df.columns:
+        df["batter_name"] = df["batter_id"]
+    df = infer_results_from_batter_change(df)
+
     return df
 
 
