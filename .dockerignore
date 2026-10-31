@@ -1,0 +1,15 @@
+.git
+.venv
+**/__pycache__
+frontend/node_modules
+frontend/dist
+.env*
+*.db
+BaseballData
+Trackman CSVs
+PlayerProfiles
+Master Reports
+RawCSVs
+uploads
+logs
+config/team.local.yaml

@@ -56,16 +56,13 @@ For local use:
 
 ## Quick Start
 
-### 🌐 Web Interface (Recommended - Easiest to Use)
+### Player Development Platform (new)
 
-1. **Install dependencies**: `pip install -r requirements.txt`
-2. **Start web server**: 
-   - **Windows**: Double-click `START_WEB_APP.bat` or run `python web_app\app.py`
-   - **Mac/Linux**: Run `python web_app/app.py`
-3. **Open browser**: Go to `http://localhost:5000`
-4. **Upload CSV file**: Drag and drop your Trackman CSV, click "Generate Report"
+Run `docker compose up --build`, then open http://localhost:5000 to import a TrackMan CSV and review a pitcher's outing. Includes PostgreSQL, React/TypeScript, import validation, duplicate protection, arsenal summaries, and pitch-location charts.
 
-**No technical knowledge required!** Just drag, drop, and click.
+Start with the invented sample at `tests/fixtures/synthetic_outing.csv`. See [the platform guide](docs/PLAYER_DEVELOPMENT_PLATFORM.md) for setup without Docker, the input contract, tests, and current limitations. This milestone is for local use; authentication and deployment are future work.
+
+The older web-report interface referenced in historical documentation is not included in this checkout. Existing CLI report generation remains available below.
 
 ### 💻 Command Line Interface
 
@@ -78,7 +75,7 @@ For local use:
 
 See [docs/QUICK_START.md](docs/QUICK_START.md) for more examples.
 See [docs/TRACKMAN_REPORT_PIPELINE.md](docs/TRACKMAN_REPORT_PIPELINE.md) for the complete automated pipeline guide.
-See [web_app/README.md](web_app/README.md) for web interface details.
+See [the platform guide](docs/PLAYER_DEVELOPMENT_PLATFORM.md) for the new application.
 
 ## Project Structure
 

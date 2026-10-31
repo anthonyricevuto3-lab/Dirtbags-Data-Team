@@ -1,0 +1,7 @@
+PitcherId,Pitcher,PitchNo,TaggedPitchType,PitchCall,RelSpeed,SpinRate,InducedVertBreak,HorzBreak,PlateLocSide,PlateLocHeight
+DEMO-001,Demo Pitcher,1,Fastball,StrikeCalled,92,2200,16,8,0.1,2.6
+DEMO-001,Demo Pitcher,2,Fastball,BallCalled,91,2180,15,9,1.2,2.1
+DEMO-001,Demo Pitcher,3,Slider,StrikeSwinging,83,2450,3,-8,0.4,1.8
+DEMO-001,Demo Pitcher,4,Slider,InPlay,84,2500,4,-9,-0.1,2.2
+DEMO-001,Demo Pitcher,5,Fastball,FoulBall,93,2250,17,8,0.2,3.1
+DEMO-001,Demo Pitcher,6,ChangeUp,BallCalled,85,1750,8,14,-0.9,1.2
